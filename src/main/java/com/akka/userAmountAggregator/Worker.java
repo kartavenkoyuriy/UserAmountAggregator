@@ -15,7 +15,7 @@ public class Worker extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
-        if(message instanceof App.Work){
+        if (message instanceof App.Work) {
             App.Work work = (App.Work) message;
             Map<Long, BigDecimal> result = aggregateAmountFor(work.getPartition());
             getSender().tell(new App.Result(result), getSelf());
@@ -29,7 +29,7 @@ public class Worker extends UntypedActor {
         for (String s : partition) {
             Map<Long, BigDecimal> tempMap = (parseStringToData(s));
             for (Map.Entry<Long, BigDecimal> longBigDecimalEntry : tempMap.entrySet()) {
-                if(resultMap.containsKey(longBigDecimalEntry.getKey())){
+                if (resultMap.containsKey(longBigDecimalEntry.getKey())) {
                     resultMap.put(longBigDecimalEntry.getKey(), resultMap.get(longBigDecimalEntry.getKey()).add(longBigDecimalEntry.getValue()));
                 } else {
                     resultMap.putAll(tempMap);
@@ -39,16 +39,13 @@ public class Worker extends UntypedActor {
         return resultMap;
     }
 
-    private Map<Long, BigDecimal> parseStringToData(String idAmountString){
+    private Map<Long, BigDecimal> parseStringToData(String idAmountString) {
         Pattern p = Pattern.compile(ID_AMOUNT_PATTERN);
         Matcher m = p.matcher(idAmountString);
         Map<Long, BigDecimal> resultMap = new HashMap<Long, BigDecimal>();
-        if(m.find()){
+        if (m.find()) {
             resultMap.put(new Long(m.group(1)), new BigDecimal(m.group(2)));
         }
         return resultMap;
     }
-
-
-
 }

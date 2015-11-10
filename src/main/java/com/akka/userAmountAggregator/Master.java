@@ -22,24 +22,25 @@ import java.util.concurrent.TimeUnit;
 public class Master extends UntypedActor {
 
     private final long start = System.currentTimeMillis();
-    private final int nrOfMessages;
-    private final int nrOfElements;
+    private final int numberOfWorkers;
+    private final int numberOfMessages;
+    private final int numberOfElements;
+    private int numberOfResults;
+
     private final String PATH = "D:\\java\\Projects\\UserAmountAggregator\\src\\main\\resources\\test.txt";
-
-
     private final ActorRef listener;
+
     private final ActorRef workerRouter;
 
     private Map<Long, BigDecimal> userIdToAmount = new HashMap<Long, BigDecimal>();
 
-    private int nrOfResults;
-
-    public Master(int nrOfWorkers, int nrOfMessages, int nrOfElements, ActorRef listener) {
-        this.nrOfMessages = nrOfMessages;
-        this.nrOfElements = nrOfElements;
+    public Master(int numberOfWorkers, int numberOfMessages, int numberOfElements, ActorRef listener) {
+        this.numberOfWorkers = numberOfWorkers;
+        this.numberOfMessages = numberOfMessages;
+        this.numberOfElements = numberOfElements;
         this.listener = listener;
 
-        workerRouter = this.getContext().actorOf(new Props(Worker.class).withRouter(new RoundRobinRouter(nrOfWorkers)),
+        workerRouter = this.getContext().actorOf(new Props(Worker.class).withRouter(new RoundRobinRouter(numberOfWorkers)),
                 "workerRouter");
     }
 
@@ -49,7 +50,7 @@ public class Master extends UntypedActor {
             //read the file
             List<String> file = getFile();
 
-            int partitionSize = IntMath.divide(file.size(), nrOfMessages, RoundingMode.UP);
+            int partitionSize = IntMath.divide(file.size(), numberOfMessages, RoundingMode.UP);
             List<List<String>> partitions = Lists.partition(file, partitionSize);
 
             for (List<String> partition : partitions) {
@@ -59,16 +60,16 @@ public class Master extends UntypedActor {
         } else if (message instanceof App.Result) {
             App.Result result = (App.Result) message;
             for (Map.Entry<Long, BigDecimal> longBigDecimalEntry : result.getAmountResult().entrySet()) {
-                if(userIdToAmount.containsKey(longBigDecimalEntry.getKey())){
+                if (userIdToAmount.containsKey(longBigDecimalEntry.getKey())) {
                     userIdToAmount.put(longBigDecimalEntry.getKey(), userIdToAmount.get(longBigDecimalEntry.getKey()).add(longBigDecimalEntry.getValue()));
                 } else {
                     userIdToAmount.put(longBigDecimalEntry.getKey(), longBigDecimalEntry.getValue());
                 }
             }
-            nrOfResults += 1;
-            if (nrOfResults == nrOfMessages) {
+            numberOfResults += 1;
+            if (numberOfResults == numberOfMessages) {
                 Duration duration = Duration.create(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
-                listener.tell(new AmountAggregation(userIdToAmount, duration), getSelf());
+                listener.tell(new App.AmountAggregation(userIdToAmount, duration), getSelf());
                 getContext().stop(getSelf());
             }
         } else {

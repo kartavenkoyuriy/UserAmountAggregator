@@ -8,8 +8,8 @@ import java.util.Map;
 public class Listener extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
-        if (message instanceof AmountAggregation) {
-            AmountAggregation amountAggregation = (AmountAggregation) message;
+        if (message instanceof App.AmountAggregation) {
+            App.AmountAggregation amountAggregation = (App.AmountAggregation) message;
             for (Map.Entry<Long, BigDecimal> longBigDecimalEntry : amountAggregation.getUserIdToAmount().entrySet()) {
                 System.out.println("id:" + longBigDecimalEntry.getKey() + ", amount:" + longBigDecimalEntry.getValue());
             }
