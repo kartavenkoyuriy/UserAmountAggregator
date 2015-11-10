@@ -14,14 +14,14 @@ public class App {
         app.calculate(2, 3, 3);
     }
 
-    public void calculate(final int numberOfWorkers, final int numberOfElements, final int nrOfMessages) {
+    public void calculate(final int numberOfWorkers, final int numberOfElements, final int numberOfMessages) {
         ActorSystem system = ActorSystem.create("PiSystem");
 
         final ActorRef listener = system.actorOf(new Props(Listener.class), "listener");
 
         ActorRef master = system.actorOf(new Props(new UntypedActorFactory() {
             public UntypedActor create() {
-                return new Master(numberOfWorkers, nrOfMessages, numberOfElements, listener);
+                return new Master(numberOfWorkers, numberOfMessages, numberOfElements, listener);
             }
         }), "master");
 
